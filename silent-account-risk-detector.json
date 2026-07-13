@@ -1,0 +1,675 @@
+{
+  "name": "Silent Account Risk Detector",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "id": "fc692f94-be1a-4684-9db2-609849b27893",
+      "name": "Daily Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -224,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Your Google Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/REPLACE_WITH_YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Accounts_Master",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "70e564ab-20e3-4490-a3de-12372f469c0f",
+      "name": "Read Accounts_Master",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Your Google Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/REPLACE_WITH_YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Renewals_Master",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "4fbd2b4f-bc3e-4a26-a4b4-c797f3edb55a",
+      "name": "Read Renewals_Master",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        160
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Your Google Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/REPLACE_WITH_YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Contacts_Master",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "edcbdb13-0f14-47ac-bcc6-e0e36445bcb9",
+      "name": "Read Contacts_Master",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        304
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Your Google Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/REPLACE_WITH_YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Interactions_Log",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "18ae4a90-1be8-4c7b-9144-bc40c0147d63",
+      "name": "Read Interactions_Log",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        464
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "Google Sheets account 3"
+        }
+      },
+      "notes": "Interactions_Log now contains raw CSM notes (no pre-tagged sentiment) - AI infers risk from the actual text."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": "account_id",
+        "options": {}
+      },
+      "id": "1b7490ac-f1af-4178-b3c2-60b97530b50d",
+      "name": "Merge Accounts+Renewals",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        240,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": "account_id",
+        "options": {}
+      },
+      "id": "fadd2bd5-da00-4ceb-a8f1-ff8d2d18dc00",
+      "name": "Merge +Contacts",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        480,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": "account_id",
+        "options": {}
+      },
+      "id": "75f7ac3c-fd51-4efc-88e8-153a1929edf1",
+      "name": "Merge +Interactions",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        720,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst filtered = items.filter(item => {\n  const daysToRenewal = item.json.days_to_renewal;\n  return daysToRenewal !== undefined && daysToRenewal <= 120;\n});\nreturn filtered;"
+      },
+      "id": "327f75e2-579a-474e-af23-933c758ee5ab",
+      "name": "Filter: Renewal within 120 days",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst sourceItems = $('Filter: Renewal within 120 days').all();\n\nreturn items.map((item, index) => {\n  let parsed;\n  try {\n    const rawText = item.json.output[0].content[0].text;\n    parsed = JSON.parse(rawText);\n  } catch (e) {\n    parsed = { risk_tier: 'Unknown', reason: 'Parse error', action: 'Review manually' };\n  }\n\n  const sourceData = sourceItems[index] ? sourceItems[index].json : {};\n\n  return {\n    json: {\n      account_id: sourceData.account_id,\n      account_name: sourceData.account_name,\n      arr: sourceData.arr,\n      risk_tier: parsed.risk_tier,\n      reason: parsed.reason,\n      action: parsed.action\n    }\n  };\n});"
+      },
+      "id": "eab62b3c-a425-4383-b548-f6860300256b",
+      "name": "Parse AI Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Your Google Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/REPLACE_WITH_YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Accounts_Master",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "account_id": "={{ $json.account_id }}",
+            "risk_tier": "={{ $json.risk_tier }}",
+            "risk_reason": "={{ $json.reason }}",
+            "recommended_action": "={{ $json.action }}",
+            "account_name": "={{ $json.account_name }}",
+            "arr": "={{ $json.arr }}"
+          },
+          "matchingColumns": [
+            "account_id"
+          ],
+          "schema": [
+            {
+              "id": "account_id",
+              "displayName": "account_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "account_name",
+              "displayName": "account_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "arr",
+              "displayName": "arr",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "plan_tier",
+              "displayName": "plan_tier",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "usage_trend_30d",
+              "displayName": "usage_trend_30d",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "risk_tier",
+              "displayName": "risk_tier",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "risk_reason",
+              "displayName": "risk_reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "recommended_action",
+              "displayName": "recommended_action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "7831748b-b257-4ed8-b3f6-72c50f78bf6f",
+      "name": "Write Back to Accounts_Master",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        1680,
+        240
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.risk_tier }}",
+              "rightValue": "High",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "922e21fc-1d9b-4089-94a1-9eb7678462f9",
+      "name": "IF High Risk",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1920,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_YOUR_CHANNEL_ID",
+          "mode": "list",
+          "cachedResultName": "your-slack-channel"
+        },
+        "text": "=\ud83d\udea8 High Risk Account: {{ $json.account_name }} (ARR ${{ $json.arr }})\nReason: {{ $json.risk_reason }}\nRecommended Action: {{ $json.recommended_action }} ",
+        "otherOptions": {}
+      },
+      "id": "e5539e0a-6f9e-4983-81e6-f6b733abf7a8",
+      "name": "Slack Alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        2160,
+        160
+      ],
+      "webhookId": "REPLACE_ON_IMPORT",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "Slack OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst grouped = {};\nfor (const item of items) {\n  const id = item.json.account_id;\n  if (!grouped[id]) {\n    grouped[id] = { account_id: id, open_ticket_count: 0, notes_combined: [] };\n  }\n  grouped[id].open_ticket_count = Math.max(grouped[id].open_ticket_count, Number(item.json.open_ticket_count) || 0);\n  grouped[id].notes_combined.push(`[${item.json.date}, ${item.json.type}] ${item.json.notes}`);\n}\nreturn Object.values(grouped).map(g => ({\n  json: {\n    account_id: g.account_id,\n    open_ticket_count: g.open_ticket_count,\n    interaction_history: g.notes_combined.join(' | ')\n  }\n}));"
+      },
+      "id": "9f6f3f58-7658-43eb-8477-9eb264b7df4f",
+      "name": "Aggregate Interactions by Account",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "chat-latest",
+          "mode": "list",
+          "cachedResultName": "CHAT-LATEST"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a Customer Success risk analyst reviewing one account. You will receive: account usage trend, ARR, plan tier, days until renewal, contract stage, contact seniority/last-contacted info, open ticket count, and 'interaction_history' - a combined log of multiple raw, real CSM notes over time, separated by ' | ' (these are NOT pre-labeled and may be ambiguous, brief, or even contradict each other - you must read them yourself and judge). Weigh recency: a recent note matters more than an older one. Notice contradictions (e.g. calm words but escalating behavior). Classify risk as Low, Medium, or High. Explain the top 1-2 concrete reasons in plain English, quoting or referencing specific details from the notes. Recommend one specific next action a CSM should take this week. Return ONLY valid JSON in this exact shape: {\"risk_tier\": \"\", \"reason\": \"\", \"action\": \"\"}"
+            },
+            {
+              "content": "={{ JSON.stringify($json) }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1168,
+        240
+      ],
+      "id": "30c80654-b40f-4226-8028-55faec483f06",
+      "name": "AI Risk Analysis",
+      "credentials": {
+        "openAiApi": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst grouped = {};\nfor (const item of items) {\n  const id = item.json.account_id;\n  if (!grouped[id]) {\n    grouped[id] = { account_id: id, contacts_combined: [] };\n  }\n  grouped[id].contacts_combined.push(`${item.json.contact_name} (${item.json.job_title}, ${item.json.seniority}) - last contacted ${item.json.last_contacted_date}`);\n}\nreturn Object.values(grouped).map(g => ({\n  json: {\n    account_id: g.account_id,\n    contacts_summary: g.contacts_combined.join(' | ')\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        304
+      ],
+      "id": "42b593fc-103e-4ddd-8432-61b378c28e8a",
+      "name": "Aggregate Contacts by Account"
+    }
+  ],
+  "connections": {
+    "Daily Trigger": {
+      "main": [
+        [
+          {
+            "node": "Read Accounts_Master",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Read Renewals_Master",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Read Contacts_Master",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Read Interactions_Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Accounts_Master": {
+      "main": [
+        [
+          {
+            "node": "Merge Accounts+Renewals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Renewals_Master": {
+      "main": [
+        [
+          {
+            "node": "Merge Accounts+Renewals",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Accounts+Renewals": {
+      "main": [
+        [
+          {
+            "node": "Merge +Contacts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Contacts_Master": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Contacts by Account",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge +Contacts": {
+      "main": [
+        [
+          {
+            "node": "Merge +Interactions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Interactions_Log": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Interactions by Account",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge +Interactions": {
+      "main": [
+        [
+          {
+            "node": "Filter: Renewal within 120 days",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Output": {
+      "main": [
+        [
+          {
+            "node": "Write Back to Accounts_Master",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Back to Accounts_Master": {
+      "main": [
+        [
+          {
+            "node": "IF High Risk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF High Risk": {
+      "main": [
+        [
+          {
+            "node": "Slack Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Interactions by Account": {
+      "main": [
+        [
+          {
+            "node": "Merge +Interactions",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Filter: Renewal within 120 days": {
+      "main": [
+        [
+          {
+            "node": "AI Risk Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Risk Analysis": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Contacts by Account": {
+      "main": [
+        [
+          {
+            "node": "Merge +Contacts",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8b68463bbfd8ef34d94eae6d21a4008e4629346bb4d080a4e493209aadf77a97"
+  },
+  "nodeGroups": [],
+  "id": "REPLACE_ON_IMPORT",
+  "tags": []
+}
