@@ -4,7 +4,7 @@ An n8n workflow that reads across four data sources every day, such as account h
 
 Built to catch the churn signal that shows up weeks before a customer ever says something's wrong: usage quietly declining, a champion who's gone quiet, tickets piling up unresolved, while a renewal-date-only tracker or a static health score stays green.
 
-📄 Full write-up with the "why" behind the design: **[Case study →](#)**
+📄 Full write-up with the "why" behind the design: **[Case study →](https://scratched-swordtail-ecc.notion.site/Silent-Account-Risk-Detector-39c6c11cc780809c964bead19af7f851)**
 
 ## How it works
 
